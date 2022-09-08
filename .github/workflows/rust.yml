@@ -132,6 +132,5 @@ jobs:
       
       - name: View logs
         run: |
-          cat /tmp/fpm-skywalking-agent.1.log
-          echo "============================="
-          cat /tmp/fpm-skywalking-agent.2.log
+          cat /tmp/*.log
+          
