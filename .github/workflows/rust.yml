@@ -30,17 +30,6 @@ env:
   LLVM_CONFIG_PATH: llvm-config-10
 
 jobs:
-  required:
-    needs:
-      - test
-      - fmt
-    runs-on: ubuntu-20.04
-    steps:
-      - name: Check results
-        run: |
-          [[ ${{ needs.test.result }} == 'success' ]] || exit 1;
-          [[ ${{ needs.fmt.result }} == 'success' ]] || exit 1;
-
   test:
     name: Test
     strategy:
