@@ -27,6 +27,7 @@ use libc::{kill, pid_t, SIGTERM};
 use once_cell::sync::Lazy;
 use std::{
     env,
+    fs::File,
     io::{self, Cursor},
     net::SocketAddr,
     process::{ExitStatus, Stdio},
@@ -271,8 +272,8 @@ fn setup_php_fpm(index: usize, fpm_addr: &str) -> Child {
     Command::new(&args[0])
         .args(&args[1..])
         .stdin(Stdio::null())
-        .stdout(Stdio::null())
-        .stderr(Stdio::null())
+        .stdout(File::create("/tmp/fpm-skywalking-stdout.log").unwrap())
+        .stderr(File::create("/tmp/fpm-skywalking-stderr.log").unwrap())
         .spawn()
         .unwrap()
 }
