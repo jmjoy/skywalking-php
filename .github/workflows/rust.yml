@@ -61,7 +61,10 @@ jobs:
         with:
           php-version: ${{ matrix.version.php }}
           tools: php-config, composer:v2
-          extensions: opcache, swoole-${{ matrix.version.swoole }}, mysqlnd, pdo, xml, bcmath, calendar, ctype, dom, exif, gettext, iconv, json, intl, mbstring, mysqli, pdo_mysql, phar, posix, readline, xmlreader, xmlwriter, yaml, zip
+          extensions: >
+            bcmath, calendar, ctype, dom, exif, gettext, iconv, intl, json, mbstring,
+            mysqli, mysqlnd, opcache, pdo, pdo_mysql, phar, posix, readline,
+            swoole-${{ matrix.version.swoole }}, xml, xmlreader, xmlwriter, yaml, zip
 
       - name: Setup php-fpm for Linux
         if: matrix.os == 'ubuntu-20.04'
@@ -76,10 +79,8 @@ jobs:
 
       - name: PHP version
         run: |
-          php --version
-          php -m
-          php-fpm --version
-          php-fpm -m
+          which php || php --version || php -m
+          which php-fpm || php-fpm --version || php-fpm -m
           php-config || true
           php -r 'echo "Swoole version: " . phpversion("swoole") . "\n";'
           composer --version
@@ -136,8 +137,7 @@ jobs:
           command: test
           args: --release --workspace
         continue-on-error: true
-      
+
       - name: View logs
         run: |
           cat /tmp/*.log
-          
