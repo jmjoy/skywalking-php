@@ -86,6 +86,8 @@ jobs:
           [[ `php-fpm --version` == PHP\ ${{ matrix.version.php }}.* ]] || exit 1;
           [[ `php-config --version` == ${{ matrix.version.php }}.* ]] || exit 1;
 
+      - run: ls -alh /usr/local/Cellar/php/8.1.10_1/pecl/20210902
+
       - name: Install Rust Stable
         uses: actions-rs/toolchain@v1
         with:
