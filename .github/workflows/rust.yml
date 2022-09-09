@@ -111,6 +111,9 @@ jobs:
           command: build
           args: --release --workspace
 
+      - run: ls -alh target/release
+        continue-on-error: true
+
       - name: Docker compose
         if: matrix.os == 'ubuntu-20.04'
         run: docker compose up -d

@@ -245,7 +245,7 @@ fn setup_php_fpm(index: usize, fpm_addr: &str) -> Child {
         "-c",
         "tests/conf/php.ini",
         "-d",
-        &format!("extension=target/{}/libskywalking_agent.so", TARGET),
+        &format!("extension=target/{}/libskywalking_agent.dylib", TARGET),
         "-d",
         "skywalking_agent.enable=On",
         "-d",
