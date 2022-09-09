@@ -18,7 +18,7 @@ name: PECL
 on:
   push:
     branches:
-      - master
+      - master_no
   pull_request:
     branches:
       - "**"
