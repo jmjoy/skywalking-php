@@ -60,6 +60,7 @@ if test "$PHP_SKYWALKING_AGENT" != "no"; then
     LICENSE:LICENSE \
     NOTICE:NOTICE \
     README.md:README.md \
+    build.rs:build.rs \
     docker-compose.yml:docker-compose.yml \
     docs:docs \
     scripts:scripts \
