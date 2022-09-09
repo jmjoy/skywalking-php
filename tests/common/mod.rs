@@ -57,6 +57,14 @@ pub const TARGET: &str = if cfg!(debug_assertions) {
     "release"
 };
 
+pub const EXT: &str = if cfg!(target_os = "linux") {
+    ".so"
+} else if cfg!(target_os = "macos") {
+    ".dylib"
+} else {
+    ""
+};
+
 pub static HTTP_CLIENT: Lazy<reqwest::Client> = Lazy::new(reqwest::Client::new);
 
 pub struct Fixture {
@@ -244,8 +252,8 @@ fn setup_php_fpm(index: usize, fpm_addr: &str) -> Child {
         &format!("tests/conf/php-fpm.{}.conf", index),
         "-c",
         "tests/conf/php.ini",
-        "-d",
-        &format!("extension=target/{}/libskywalking_agent.dylib", TARGET),
+        // "-d",
+        // &format!("extension=target/{}/libskywalking_agent{}", TARGET, EXT),
         "-d",
         "skywalking_agent.enable=On",
         "-d",
