@@ -17,9 +17,7 @@ use crate::{channel, SKYWALKING_AGENT_SERVER_ADDR, SKYWALKING_AGENT_WORKER_THREA
 use phper::ini::Ini;
 use skywalking::reporter::grpc::GrpcReporter;
 use std::{
-    num::NonZeroUsize,
-    thread::{self, available_parallelism},
-    time::Duration,
+    cmp::Ordering, num::NonZeroUsize, process::exit, thread::available_parallelism, time::Duration,
 };
 use tokio::{
     runtime::{self, Runtime},
@@ -34,14 +32,23 @@ pub fn init_worker() {
     let server_addr = Ini::get::<String>(SKYWALKING_AGENT_SERVER_ADDR).unwrap_or_default();
     let worker_threads = worker_threads();
 
-    if let Err(err) = thread::Builder::new()
-        .name("sw: manager".to_string())
-        .spawn(move || {
-            let rt = new_tokio_runtime(worker_threads);
-            rt.block_on(start_worker(server_addr));
-        })
-    {
-        error!(?err, "spawn manager thread failed");
+    unsafe {
+        // TODO Shutdown previous worker before fork if threre is a PHP-FPM reload
+        // operation.
+        // TODO Chagne the worker process name.
+
+        let pid = libc::fork();
+        match pid.cmp(&0) {
+            Ordering::Less => {
+                error!("fork failed");
+            }
+            Ordering::Equal => {
+                let rt = new_tokio_runtime(worker_threads);
+                rt.block_on(start_worker(server_addr));
+                exit(0);
+            }
+            Ordering::Greater => {}
+        }
     }
 }
 
@@ -56,7 +63,6 @@ fn worker_threads() -> usize {
 
 fn new_tokio_runtime(worker_threads: usize) -> Runtime {
     runtime::Builder::new_multi_thread()
-        .thread_name("sw: worker")
         .enable_all()
         .worker_threads(worker_threads)
         .build()
