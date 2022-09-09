@@ -51,14 +51,18 @@ jobs:
           submodules: 'recursive'
 
       - name: Install libclang
+        if: matrix.os == 'ubuntu-20.04'
         run: sudo apt-get install -y llvm-10-dev libclang-10-dev protobuf-compiler
+
+      - name: Install protobuf for Macos
+        if: matrix.os == 'macos-12'
+        run: brew install protobuf
 
       - name: Setup PHP
         uses: shivammathur/setup-php@v2
         with:
           php-version: ${{ matrix.version.php }}
           tools: php-config
-          extensions: swoole-${{ matrix.version.swoole }}
 
       - name: Install Rust Stable Globally
         run: |
