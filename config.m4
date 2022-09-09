@@ -49,13 +49,15 @@ if test "$PHP_SKYWALKING_AGENT" != "no"; then
     CARGO_MODE_DIR="debug"
   fi
 
+  CDYLIB_EXT=".so"
+
+  if test "$(uname)" == "freebsd"; then
+    CDYLIB_EXT=".dylib"
+  fi
+
   echo -e "./modules/skywalking_agent.so:\n\
 \tPHP_CONFIG=$PHP_PHP_CONFIG cargo build $CARGO_MODE_FLAGS\n\
-\tif [[ "$(uname)" == 'Linux' ]]; then\n\
-\t    cp ./target/$CARGO_MODE_DIR/libskywalking_agent.so ./modules/skywalking_agent.so\n\
-\telif [[ "$(uname)" == 'FreeBSD' ]]; then\n\
-\t    cp ./target/$CARGO_MODE_DIR/libskywalking_agent.dylib ./modules/skywalking_agent.so\n\
-\tfi\n\
+\tcp ./target/$CARGO_MODE_DIR/libskywalking_agent$CDYLIB_EXT ./modules/skywalking_agent.so\n\
 " > Makefile.objects
 
   PHP_MODULES="./modules/skywalking_agent.so"

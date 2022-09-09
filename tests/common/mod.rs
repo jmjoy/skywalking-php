@@ -51,12 +51,14 @@ pub const FPM_SERVER_2_ADDRESS: &str = "127.0.0.1:9002";
 pub const COLLECTOR_GRPC_ADDRESS: &str = "127.0.0.1:19876";
 pub const COLLECTOR_HTTP_ADDRESS: &str = "127.0.0.1:12800";
 
+#[allow(dead_code)]
 pub const TARGET: &str = if cfg!(debug_assertions) {
     "debug"
 } else {
     "release"
 };
 
+#[allow(dead_code)]
 pub const EXT: &str = if cfg!(target_os = "linux") {
     ".so"
 } else if cfg!(target_os = "macos") {
