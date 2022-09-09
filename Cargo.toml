@@ -36,7 +36,7 @@ name = "skywalking_agent"
 crate-type = ["lib", "cdylib"]
 
 [dependencies]
-anyhow = "1.0.64"
+anyhow = { version = "1.0.64", features = ["backtrace"] }
 chrono = "0.4.22"
 dashmap = "5.4.0"
 futures-util = "0.3.24"
