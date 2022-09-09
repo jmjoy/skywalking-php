@@ -69,17 +69,19 @@ jobs:
           sudo apt-get install -y php${{ matrix.version.php }}-fpm
           sudo ln -sf /usr/sbin/php-fpm${{ matrix.version.php }} /usr/sbin/php-fpm
 
-      - name: Setup php-fpm for Macos
-        if: matrix.os == 'macos-12'
-        run: |
-          brew install php@${{ matrix.version.php }}
+      # - name: Setup php-fpm for Macos
+      #   if: matrix.os == 'macos-12'
+      #   run: |
+      #     brew install php@${{ matrix.version.php }}
 
       - name: PHP version
         run: |
           php --version
+          php -m
           php-fpm --version
+          php-fpm -m
           php-config || true
-          php -r 'echo "Swoole version: " . phpversion("swoole");'
+          php -r 'echo "Swoole version: " . phpversion("swoole") . "\n";'
           composer --version
 
           [[ `php --version` == PHP\ ${{ matrix.version.php }}.* ]] || exit 1;

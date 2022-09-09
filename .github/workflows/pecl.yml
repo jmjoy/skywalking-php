@@ -62,24 +62,13 @@ jobs:
           php-version: ${{ matrix.version.php }}
           tools: php-config
 
-      - name: Install Rust Stable Globally
-        run: |
-          sudo curl https://sh.rustup.rs -sSf | sh -s -- -y --no-modify-path
-
-      - name: Setup cargo cache
-        uses: actions/cache@v3
-        with:
-          path: |
-            ~/.cargo/bin/
-            ~/.cargo/registry/index/
-            ~/.cargo/registry/cache/
-            ~/.cargo/git/db/
-            target/
-          key: ${{ matrix.os }}-pecl-${{ matrix.version.php }}-${{ hashFiles('**/Cargo.lock') }}
+      # - name: Install Rust Stable Globally
+      #   run: |
+      #     curl https://sh.rustup.rs -sSf | sudo sh -s -- -y --no-modify-path
 
       - name: PECL install
         run: |
           sudo cargo run -p scripts --release -- create-package-xml --version 0.0.0 --notes "Just for TEST."
           cat package.xml
-          # printf "\n" | sudo pecl install package.xml
-          # php -d "extension=skywalking_agent" --ri skywalking_agent
+          printf "\n" | sudo pecl install package.xml
+          php -d "extension=skywalking_agent" --ri skywalking_agent
