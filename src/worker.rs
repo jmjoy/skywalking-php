@@ -91,7 +91,14 @@ async fn start_worker(server_addr: String) {
         };
         let channel = connect(endpoint).await;
 
-        let reporter = GrpcReporter::new_with_pc(channel, (), channel::Consumer);
+        let consumer = match channel::Consumer::new() {
+            Ok(consumer) => consumer,
+            Err(err) => {
+                error!(?err, "Create consumer failed");
+                return;
+            }
+        };
+        let reporter = GrpcReporter::new_with_pc(channel, (), consumer);
 
         // report_instance_properties(channel.clone()).await;
         // mark_ready_for_request();
