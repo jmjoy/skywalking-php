@@ -18,18 +18,20 @@ use crate::{
     execute::register_execute_functions,
     util::{get_sapi_module_name, IPS},
     worker::init_worker,
-    SKYWALKING_AGENT_AUTHENTICATION, SKYWALKING_AGENT_ENABLE, SKYWALKING_AGENT_ENABLE_TLS,
+    SKYWALKING_AGENT_AUTHENTICATION, SKYWALKING_AGENT_ENABLE, SKYWALKING_AGENT_ENABLE_ERROR_LOG,
+    SKYWALKING_AGENT_ENABLE_TLS, SKYWALKING_AGENT_ERROR_REPORTING,
     SKYWALKING_AGENT_HEARTBEAT_PERIOD, SKYWALKING_AGENT_LOG_FILE, SKYWALKING_AGENT_LOG_LEVEL,
     SKYWALKING_AGENT_PROPERTIES_REPORT_PERIOD_FACTOR, SKYWALKING_AGENT_RUNTIME_DIR,
     SKYWALKING_AGENT_SERVICE_NAME, SKYWALKING_AGENT_SKYWALKING_VERSION,
     SKYWALKING_AGENT_SSL_CERT_CHAIN_PATH, SKYWALKING_AGENT_SSL_KEY_PATH,
-    SKYWALKING_AGENT_SSL_TRUSTED_CA_PATH,
+    SKYWALKING_AGENT_SSL_TRUSTED_CA_PATH, errors::register_error_functions,
 };
 use anyhow::bail;
 use once_cell::sync::Lazy;
 use phper::{arrays::ZArr, ini::ini_get, sys};
 use skywalking::{
     common::random_generator::RandomGenerator,
+    logging::logger::{self, Logger},
     trace::tracer::{self, Tracer},
 };
 use std::{
@@ -117,6 +119,12 @@ pub static HEARTBEAT_PERIOD: Lazy<i64> =
 pub static PROPERTIES_REPORT_PERIOD_FACTOR: Lazy<i64> =
     Lazy::new(|| ini_get::<i64>(SKYWALKING_AGENT_PROPERTIES_REPORT_PERIOD_FACTOR));
 
+pub static ENABLE_ERROR_LOG: Lazy<bool> =
+    Lazy::new(|| ini_get::<bool>(SKYWALKING_AGENT_ENABLE_ERROR_LOG));
+
+pub static ERROR_REPORTING: Lazy<i64> =
+    Lazy::new(|| ini_get::<i64>(SKYWALKING_AGENT_ERROR_REPORTING));
+
 pub fn init() {
     if !is_enable() {
         return;
@@ -182,8 +190,21 @@ pub fn init() {
         Reporter::new(&*SOCKET_FILE_PATH),
     ));
 
+    // Initialize log reporter.
+    if *Lazy::force(&ENABLE_ERROR_LOG) {
+        let error_reporting = *Lazy::force(&ERROR_REPORTING);
+        info!(error_reporting, "Enable skywalking error reporting");
+
+        logger::set_global_logger(Logger::new(
+            service_name,
+            service_instance,
+            Reporter::new(&*SOCKET_FILE_PATH),
+        ));
+    }
+
     // Hook functions.
     register_execute_functions();
+    register_error_functions();
 }
 
 pub fn shutdown() {

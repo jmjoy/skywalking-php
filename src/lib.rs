@@ -29,7 +29,7 @@ mod tag;
 mod util;
 mod worker;
 
-use phper::{ini::Policy, modules::Module, php_get_module};
+use phper::{ini::Policy, modules::Module, php_get_module, sys};
 
 use crate::request::HACK_SWOOLE_ON_REQUEST_FUNCTION_NAME;
 pub use errors::{Error, Result};
@@ -82,6 +82,12 @@ const SKYWALKING_AGENT_HEARTBEAT_PERIOD: &str = "skywalking_agent.heartbeat_peri
 /// heartbeat_period * properties_report_period_factor seconds.
 const SKYWALKING_AGENT_PROPERTIES_REPORT_PERIOD_FACTOR: &str =
     "skywalking_agent.properties_report_period_factor";
+
+/// Wether to report php error log to OAP server.
+const SKYWALKING_AGENT_ENABLE_ERROR_LOG: &str = "skywalking_agent.enable_error_log";
+
+/// Filtering the php error log to report by log level, like `error_reporting`.
+const SKYWALKING_AGENT_ERROR_REPORTING: &str = "skywalking_agent.error_reporting";
 
 #[php_get_module]
 pub fn get_module() -> Module {
@@ -145,6 +151,17 @@ pub fn get_module() -> Module {
     module.add_ini(
         SKYWALKING_AGENT_PROPERTIES_REPORT_PERIOD_FACTOR,
         10i64,
+        Policy::System,
+    );
+    module.add_ini(SKYWALKING_AGENT_ENABLE_ERROR_LOG, false, Policy::System);
+    module.add_ini(
+        SKYWALKING_AGENT_ERROR_REPORTING,
+        (sys::E_ALL
+            & !sys::E_NOTICE
+            & !sys::E_USER_NOTICE
+            & !sys::E_DEPRECATED
+            & !sys::E_USER_DEPRECATED
+            & !sys::E_STRICT) as i64,
         Policy::System,
     );
 

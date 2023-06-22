@@ -13,8 +13,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+use phper::sys;
+use std::ffi::c_int;
 use anyhow::anyhow;
 use std::{result, str::Utf8Error};
+use crate::module::ENABLE_ERROR_LOG;
 
 pub type Result<T> = result::Result<T, Error>;
 
@@ -43,4 +46,30 @@ impl From<String> for Error {
     fn from(e: String) -> Self {
         Self::Anyhow(anyhow!("{}", e))
     }
+}
+
+static mut ORI_ZEND_ERROR_CB: Option<
+    unsafe extern "C" fn(
+        type_: c_int,
+        error_filename: *mut sys::zend_string,
+        error_lineno: u32,
+        message: *mut sys::zend_string,
+    ),
+> = None;
+
+pub fn register_error_functions() {
+    unsafe {
+    if *ENABLE_ERROR_LOG {
+        ORI_ZEND_ERROR_CB = sys::zend_error_cb;
+    }
+    }
+}
+
+unsafe extern "C" fn zend_error_cb(
+    type_: c_int,
+    error_filename: *mut sys::zend_string,
+    error_lineno: u32,
+    message: *mut sys::zend_string,
+) {
+
 }
