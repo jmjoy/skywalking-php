@@ -15,6 +15,7 @@
 
 use crate::{
     channel::Reporter,
+    errors::register_error_functions,
     execute::register_execute_functions,
     util::{get_sapi_module_name, IPS},
     worker::init_worker,
@@ -24,7 +25,7 @@ use crate::{
     SKYWALKING_AGENT_PROPERTIES_REPORT_PERIOD_FACTOR, SKYWALKING_AGENT_RUNTIME_DIR,
     SKYWALKING_AGENT_SERVICE_NAME, SKYWALKING_AGENT_SKYWALKING_VERSION,
     SKYWALKING_AGENT_SSL_CERT_CHAIN_PATH, SKYWALKING_AGENT_SSL_KEY_PATH,
-    SKYWALKING_AGENT_SSL_TRUSTED_CA_PATH, errors::register_error_functions,
+    SKYWALKING_AGENT_SSL_TRUSTED_CA_PATH,
 };
 use anyhow::bail;
 use once_cell::sync::Lazy;

@@ -13,11 +13,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use phper::sys;
-use std::ffi::c_int;
-use anyhow::anyhow;
-use std::{result, str::Utf8Error};
 use crate::module::ENABLE_ERROR_LOG;
+use anyhow::anyhow;
+use cfg_if::cfg_if;
+use phper::{sys};
+use std::{ffi::c_int, result, str::Utf8Error};
+use tracing::error;
 
 pub type Result<T> = result::Result<T, Error>;
 
@@ -48,28 +49,89 @@ impl From<String> for Error {
     }
 }
 
-static mut ORI_ZEND_ERROR_CB: Option<
-    unsafe extern "C" fn(
-        type_: c_int,
-        error_filename: *mut sys::zend_string,
-        error_lineno: u32,
-        message: *mut sys::zend_string,
-    ),
-> = None;
+cfg_if! {
+    if #[cfg(phper_major_version="7")] {
+        use std::ffi::{c_char, CStr};
+        use phper::pg;
 
-pub fn register_error_functions() {
-    unsafe {
-    if *ENABLE_ERROR_LOG {
-        ORI_ZEND_ERROR_CB = sys::zend_error_cb;
-    }
+        static mut ORI_ZEND_ERROR_CB: Option<
+            unsafe extern "C" fn(
+                type_: c_int,
+                error_filename: *const c_char,
+                error_lineno: u32,
+                format: *const c_char,
+                args: *mut sys::__va_list_tag,
+            ),
+        > = None;
+
+        unsafe extern "C" fn zend_error_cb(
+            type_: c_int,
+            error_filename: *const c_char,
+            error_lineno: u32,
+            format: *const c_char,
+            args: *mut sys::__va_list_tag,
+        ) {
+            // let mut message: *mut c_char = std::ptr::null_mut();
+            // sys::zend_vspprintf(
+            //     &mut message,
+            //     pg!(log_errors_max_len) as usize,
+            //     format,
+            //     args,
+            // );
+            common_zend_error_cb(
+                type_,
+                None,// CStr::from_ptr(error_filename).to_str().ok(), 
+                error_lineno,
+                None,// CStr::from_ptr(message).to_str().ok(),
+            );
+
+            // if let Some(ori_zend_error_cb) = ORI_ZEND_ERROR_CB {
+            //     (ori_zend_error_cb )(type_, error_filename, error_lineno, format, args);
+            // }
+        }
+    } else {
+        use phper::strings::ZStr;
+
+        static mut ORI_ZEND_ERROR_CB: Option<
+            unsafe extern "C" fn(
+                type_: c_int,
+                error_filename: *mut sys::zend_string,
+                error_lineno: u32,
+                message: *mut sys::zend_string,
+            ),
+        > = None;
+
+        unsafe extern "C" fn zend_error_cb(
+            type_: c_int,
+            error_filename: *mut sys::zend_string,
+            error_lineno: u32,
+            message: *mut sys::zend_string,
+        ) {
+            let error_filename = ZStr::try_from_mut_ptr(error_filename).and_then(|s| s.to_str().ok());
+            let message = ZStr::try_from_mut_ptr(message).and_then(|s| s.to_str().ok());
+            common_zend_error_cb(type_, error_filename, error_lineno, message);
+
+            if let Some(ori_zend_error_cb) = ORI_ZEND_ERROR_CB {
+                (ori_zend_error_cb )(type_, error_filename, error_lineno, message);
+            }
+        }
     }
 }
 
-unsafe extern "C" fn zend_error_cb(
-    type_: c_int,
-    error_filename: *mut sys::zend_string,
-    error_lineno: u32,
-    message: *mut sys::zend_string,
-) {
+pub fn register_error_functions() {
+    unsafe {
+        if *ENABLE_ERROR_LOG {
+            ORI_ZEND_ERROR_CB = sys::zend_error_cb;
+            sys::zend_error_cb = Some(zend_error_cb);
+        }
+    }
+}
 
+fn common_zend_error_cb(
+    type_: c_int,
+    error_filename: Option<&str>,
+    error_lineno: u32,
+    message: Option<&str>,
+) {
+    panic!("fuck you");
 }
